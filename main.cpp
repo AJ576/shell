@@ -5,13 +5,46 @@
 #include<vector>
 #include<sstream>
 
-int main(){
 
-    std::cout<<"This is a shell \n";
+int main(){
+    char buffer [FILENAME_MAX];
+    std::string homePath;
+    if(getcwd(buffer, sizeof(buffer)) != NULL){
+        homePath = buffer;
+    }
+    else{
+        perror("getcwd() error");
+        return 1;
+    }
+    //std::cout<<"This is a shell \n";
     std::string command;
     while (true)
     {
-        std::cout<<"shell>";
+        // std::cout<<"shell>";
+        std::string shell = "shell";
+        std::string path;
+        if(getcwd(buffer, sizeof(buffer)) != NULL){
+            std::string cwd(buffer);
+            if (cwd == homePath){
+                path = "~";
+            } 
+            else if(cwd.find(homePath) == 0)
+            {
+                cwd.erase(0,homePath.size());
+                path = "~"+cwd;
+            }
+            else
+            {
+                path = std::string(buffer);
+            }
+        }
+        
+        else
+        {
+            perror("getcwd() error");
+            return 1;
+        }
+        std::cout<<path<<"\n"<<"shell>";
         std:: getline(std::cin, command);
 
         if (command == "exit")
@@ -29,13 +62,25 @@ int main(){
         }
 
         if (tokens[0] == "cd"){
-
-            std::string path;
-            for(size_t i = 1; i<tokens.size();i++)
+            if (tokens.size() == 1)
             {
-                path+=tokens[i];
+                if(chdir(homePath.c_str()) != 0)
+                {
+                    perror(("cd: "+ homePath).c_str());
+                }
             }
-            chdir(path.c_str());
+            else{
+                std::string path;
+                for(size_t i = 1; i<tokens.size();i++)
+                {  
+                    path+=tokens[i];
+                }
+                if(chdir(path.c_str()) != 0)
+                {
+                    perror(("cd: "+ path).c_str());
+                }
+            }
+            
             continue;
         }
         
@@ -62,10 +107,7 @@ int main(){
         {
             int status;
             waitpid(pid, &status, 0); 
-            std::cout<<"executed \n";  
         }
-
-     
 
     }
     return 0;
