@@ -2,7 +2,7 @@
 #include<unistd.h>
 #include<sys/wait.h>
 #include<vector>
-#include<stdio.h>
+
 
 std::vector<char*> makeArgs(const std::vector<std::string>& tokens)
 {
@@ -50,7 +50,7 @@ int main()
             for(auto& p : pipes)
             {
                 close(p[0]);
-                close (p[1]);
+                close(p[1]);
             }
 
             auto argv = makeArgs(commands[i]);
