@@ -5,10 +5,13 @@
 #include<vector>
 #include<sstream>
 
+//next job is piping
+
 std::string renderPrompt(const std::string& homePath);
 std::vector<std::string> tokenizePrompt(const std::string& command);
 bool handle_builtin(const std::vector<std::string>& tokens, const std::string& homePath);
 void run_external(const std::vector<std::string>& tokens);
+std::vector<char*> makeArgs(const std::vector<std::string>& tokens);
 
 int main(){
     // this sets the homepath. it can be used for a lot of things in a real shell
@@ -100,6 +103,11 @@ std::vector<std::string> tokenizePrompt(const std::string& command)
 //pre takes in the tokens and the homePath(mostly for the cd to be able to return to home easily)
 bool handle_builtin(const std::vector<std::string>& tokens, const std::string& homePath)
 {
+    if (tokens.empty()) 
+    {
+    return true; // nothing to do
+    }   
+
     if (tokens[0] == "cd")
     {
         if (tokens.size() == 1)
@@ -141,14 +149,9 @@ void run_external(const std::vector<std::string>& tokens)
     }
     else if(pid == 0)
     {
-        if (tokens.empty()) return;
+        if (tokens.empty()) _exit(0); //always do this in child if not using exec
 
-        std::vector<char*>argv;
-        for(auto& s: tokens)
-        {
-            argv.push_back(const_cast<char*>(s.c_str()));
-        }
-        argv.push_back(nullptr);
+        std::vector<char*>argv = makeArgs(tokens);
         execvp(argv[0],argv.data());
         perror("execvp");
     }
@@ -159,3 +162,15 @@ void run_external(const std::vector<std::string>& tokens)
     }
 }
 //post has succesfully run the child process with the command
+
+std::vector<char*> makeArgs(const std::vector<std::string>& tokens)
+{
+    std::vector<char*>argv;
+    for(auto& s: tokens)
+    {
+        argv.push_back(const_cast<char*>(s.c_str()));
+    }
+    argv.push_back(nullptr);
+
+    return argv;
+}
